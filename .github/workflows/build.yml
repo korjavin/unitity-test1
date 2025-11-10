@@ -1,0 +1,208 @@
+name: Unity Build Pipeline
+
+# This workflow automatically builds your Unity project when you push code
+# It creates builds for Windows, Linux, and WebGL
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual triggering from GitHub Actions tab
+
+# Environment variables used throughout the workflow
+env:
+  UNITY_VERSION: 2022.3.10f1  # Must match your project's Unity version
+  PROJECT_PATH: .
+
+jobs:
+  # ============================================================================
+  # BUILD JOB - Creates game builds for multiple platforms
+  # ============================================================================
+  build:
+    name: Build for ${{ matrix.targetPlatform }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false  # Continue other builds even if one fails
+      matrix:
+        targetPlatform:
+          - StandaloneWindows64  # Windows build
+          - StandaloneLinux64    # Linux build
+          - WebGL                 # Web browser build
+          # - StandaloneOSX       # macOS build (requires macOS runner)
+          # - Android             # Android build
+          # - iOS                 # iOS build (requires macOS runner)
+
+    steps:
+      # ----------------------------------------------------------------------
+      # STEP 1: Checkout code from repository
+      # ----------------------------------------------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+          lfs: true       # Enable Git LFS for large files (models, textures)
+
+      # ----------------------------------------------------------------------
+      # STEP 2: Cache Unity Library folder for faster builds
+      # ----------------------------------------------------------------------
+      - name: Cache Unity Library
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.targetPlatform }}-
+            Library-
+
+      # ----------------------------------------------------------------------
+      # STEP 3: Build the Unity project
+      # ----------------------------------------------------------------------
+      - name: Build Unity Project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          unityVersion: ${{ env.UNITY_VERSION }}
+          buildName: ZeldaLikeStarter
+          buildsPath: build
+          # buildMethod: # Optional: custom build method script
+
+      # ----------------------------------------------------------------------
+      # STEP 4: Upload build artifacts for download
+      # ----------------------------------------------------------------------
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Build-${{ matrix.targetPlatform }}
+          path: build/${{ matrix.targetPlatform }}
+          retention-days: 14  # Keep builds for 2 weeks
+
+  # ============================================================================
+  # OPTIONAL: TEST JOB - Runs Unity tests before building
+  # ============================================================================
+  # Uncomment this section to enable automated testing
+  #
+  # test:
+  #   name: Run Unity Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v3
+  #       with:
+  #         lfs: true
+  #
+  #     - name: Cache Unity Library
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: Library
+  #         key: Library-test-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+  #         restore-keys: Library-test-
+  #
+  #     - name: Run Tests
+  #       uses: game-ci/unity-test-runner@v4
+  #       env:
+  #         UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  #         UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  #         UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  #       with:
+  #         unityVersion: ${{ env.UNITY_VERSION }}
+  #         githubToken: ${{ secrets.GITHUB_TOKEN }}
+  #
+  #     - name: Upload Test Results
+  #       uses: actions/upload-artifact@v3
+  #       if: always()
+  #       with:
+  #         name: Test Results
+  #         path: artifacts
+
+  # ============================================================================
+  # OPTIONAL: DEPLOY JOB - Automatically deploy WebGL build
+  # ============================================================================
+  # deploy:
+  #   name: Deploy to GitHub Pages
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main'  # Only deploy from main branch
+  #
+  #   steps:
+  #     - name: Download WebGL Build
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: Build-WebGL
+  #         path: build
+  #
+  #     - name: Deploy to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v3
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./build/WebGL
+
+# ==============================================================================
+# SETUP INSTRUCTIONS
+# ==============================================================================
+#
+# To use this CI/CD pipeline, you need to set up Unity licensing:
+#
+# 1. GET YOUR UNITY LICENSE:
+#    - Go to https://license.unity3d.com/manual
+#    - Follow the activation steps for personal/professional license
+#    - Or use the Game CI activation guide:
+#      https://game.ci/docs/github/activation
+#
+# 2. ADD SECRETS TO YOUR GITHUB REPOSITORY:
+#    Go to: Repository → Settings → Secrets and variables → Actions
+#    Add these secrets:
+#
+#    UNITY_LICENSE:
+#      - Your Unity license file content (entire .ulf file)
+#      - Get from: https://license.unity3d.com/manual
+#
+#    UNITY_EMAIL:
+#      - Your Unity account email
+#
+#    UNITY_PASSWORD:
+#      - Your Unity account password
+#
+# 3. VERIFY UNITY VERSION:
+#    - Make sure UNITY_VERSION matches your project
+#    - Check: ProjectSettings/ProjectVersion.txt
+#
+# 4. PUSH TO TRIGGER BUILD:
+#    - Push to main or develop branch
+#    - Or create a pull request
+#    - Or manually trigger from Actions tab
+#
+# 5. DOWNLOAD BUILDS:
+#    - Go to Actions tab in GitHub
+#    - Click on your workflow run
+#    - Download artifacts at the bottom
+#
+# ==============================================================================
+# TROUBLESHOOTING
+# ==============================================================================
+#
+# Build fails with "Invalid Unity license":
+#   → Check that UNITY_LICENSE secret is set correctly
+#   → License content should be entire .ulf file
+#
+# Build fails with "Unity version not found":
+#   → Update UNITY_VERSION to match ProjectSettings/ProjectVersion.txt
+#
+# Build is very slow:
+#   → First build always slower (no cache)
+#   → Subsequent builds use cached Library folder
+#
+# Out of GitHub Actions minutes:
+#   → Free tier: 2000 minutes/month
+#   → Optimize by only building on main branch
+#   → Or only build specific platforms
+#
+# ==============================================================================
