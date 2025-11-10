@@ -1,17 +1,10 @@
 name: Unity Build Pipeline
 
-# This workflow automatically builds your Unity project when you push code
-# It creates builds for macOS only
+# This workflow builds your Unity project for macOS
+# MANUAL TRIGGER ONLY - Go to Actions tab → Unity Build Pipeline → Run workflow
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:  # Allows manual triggering from GitHub Actions tab
+  workflow_dispatch:  # Manual triggering only from GitHub Actions tab
 
 # Environment variables used throughout the workflow
 env:
@@ -170,10 +163,11 @@ jobs:
 #    - Make sure UNITY_VERSION matches your project
 #    - Check: ProjectSettings/ProjectVersion.txt
 #
-# 4. PUSH TO TRIGGER BUILD:
-#    - Push to main or develop branch
-#    - Or create a pull request
-#    - Or manually trigger from Actions tab
+# 4. TRIGGER BUILD MANUALLY:
+#    - Go to Actions tab in GitHub
+#    - Click "Unity Build Pipeline" on the left
+#    - Click "Run workflow" button (top right)
+#    - Select branch and click "Run workflow"
 #
 # 5. DOWNLOAD BUILDS:
 #    - Go to Actions tab in GitHub

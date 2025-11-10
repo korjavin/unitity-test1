@@ -186,67 +186,90 @@ Use the PhysicsConfigurator component or open `ProjectSettings/DynamicsManager.a
 
 ## 🏗️ Building Your Game
 
-### Building for Windows
+### 🚀 Quick Local Build (Recommended for Mac Users)
 
-1. Go to `File` → `Build Settings`
-2. Click `Add Open Scenes` to add your current scene
-3. Select `PC, Mac & Linux Standalone`
-4. Set `Target Platform` to `Windows`
-5. Click `Build` and choose an output folder
-6. Unity will create an executable (.exe) file
+**Build on your Mac in 1 command:**
 
-### Building for Mac
+```bash
+./build-local.sh
+```
 
-1. Same as Windows, but select `Mac OSX` as target platform
+That's it! The script will:
+- ✅ Find Unity automatically
+- ✅ Build your game
+- ✅ Create a `.app` file ready to run
 
-### Building for WebGL
+**Output:** `Builds/macOS/ZeldaLikeStarter.app`
 
-1. In Build Settings, select `WebGL`
-2. Click `Switch Platform` (may take a while)
-3. Click `Build` and choose an output folder
-4. Upload the built files to a web hosting service
+📖 **Detailed guide:** See [LOCAL_BUILD.md](Documentation/Guides/LOCAL_BUILD.md)
 
-### Build Tips
-
-- **Optimize**: Go to `Edit` → `Project Settings` → `Quality` and adjust settings
-- **Test often**: Build and test your game frequently to catch issues early
-- **Scene management**: Make sure all scenes you want are in Build Settings
+**First time?** Make the script executable:
+```bash
+chmod +x build-local.sh
+```
 
 ---
 
-## 🔄 CI/CD - Automated Builds
+### Building in Unity Editor
 
-This project includes GitHub Actions for automatic building!
+**For any platform (Windows, Mac, Linux, WebGL):**
+
+1. Go to `File` → `Build Settings`
+2. Click `Add Open Scenes` to add your current scene
+3. Select target platform:
+   - `PC, Mac & Linux Standalone` → Choose Windows/Mac/Linux
+   - `WebGL` for web browsers
+4. Click `Switch Platform` if needed (may take a while)
+5. Click `Build` and choose an output folder
+6. Unity will create your game files
+
+**Build Tips:**
+- **Optimize**: `Edit` → `Project Settings` → `Quality`
+- **Test often**: Build frequently to catch issues early
+- **Scene management**: Ensure all scenes are added to Build Settings
+
+---
+
+## 🔄 CI/CD - Automated Cloud Builds
+
+This project includes GitHub Actions for cloud building!
 
 ### What is CI/CD?
 
-**Continuous Integration/Continuous Deployment** automatically builds your game whenever you push code changes.
+**Continuous Integration/Continuous Deployment** builds your game in the cloud without tying up your computer.
 
-### Setup Instructions
+### Current Configuration
 
-1. **Unity License** (required for automated builds):
-   - You need a Unity Personal license file
-   - See `.github/workflows/build.yml` for configuration
-   - Follow [Game CI documentation](https://game.ci/docs/github/activation) for setup
+- **Platform:** macOS only
+- **Trigger:** Manual only (no automatic builds on push)
+- **Cost:** Uses GitHub Actions minutes (10x rate for macOS)
 
-2. **Configure Secrets** in your GitHub repository:
-   - Go to repository Settings → Secrets → Actions
-   - Add these secrets:
-     - `UNITY_LICENSE` - Your Unity license file contents
+### How to Use
+
+1. **Set up Unity License** (one-time):
+   - Go to: Repository → Settings → Secrets and variables → Actions
+   - Add secrets:
+     - `UNITY_LICENSE` - Your Unity license file (.ulf contents)
      - `UNITY_EMAIL` - Your Unity account email
      - `UNITY_PASSWORD` - Your Unity account password
+   - Guide: [Game CI activation](https://game.ci/docs/github/activation)
 
-3. **Automatic Builds**:
-   - Pushes to `main` branch trigger builds
-   - Pull requests also trigger builds
-   - Find build artifacts in the Actions tab
+2. **Trigger Build Manually:**
+   - Go to "Actions" tab in GitHub
+   - Click "Unity Build Pipeline" on the left
+   - Click "Run workflow" button (top right)
+   - Select branch and click "Run workflow"
 
-### Manual Build Trigger
+3. **Download Build:**
+   - Wait for build to complete (~10-15 minutes)
+   - Download "Build-StandaloneOSX" artifact
+   - Extract and run!
 
-You can also trigger builds manually:
-- Go to "Actions" tab in GitHub
-- Select "Unity Build" workflow
-- Click "Run workflow"
+### Recommendation
+
+💡 **Use local builds** (`./build-local.sh`) for daily development - it's faster, free, and easier!
+
+💡 **Use CI/CD** only when you need to build while doing other work, or for official releases
 
 ---
 
