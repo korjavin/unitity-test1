@@ -1,7 +1,7 @@
 name: Unity Build Pipeline
 
 # This workflow automatically builds your Unity project when you push code
-# It creates builds for Windows, Linux, and WebGL
+# It creates builds for macOS only
 
 on:
   push:
@@ -20,22 +20,17 @@ env:
 
 jobs:
   # ============================================================================
-  # BUILD JOB - Creates game builds for multiple platforms
+  # BUILD JOB - Creates macOS game build
   # ============================================================================
   build:
-    name: Build for ${{ matrix.targetPlatform }}
-    runs-on: ubuntu-latest
+    name: Build for macOS
+    runs-on: macos-latest  # macOS runner required for macOS builds
 
     strategy:
-      fail-fast: false  # Continue other builds even if one fails
+      fail-fast: false
       matrix:
         targetPlatform:
-          - StandaloneWindows64  # Windows build
-          - StandaloneLinux64    # Linux build
-          - WebGL                 # Web browser build
-          # - StandaloneOSX       # macOS build (requires macOS runner)
-          # - Android             # Android build
-          # - iOS                 # iOS build (requires macOS runner)
+          - StandaloneOSX  # macOS build
 
     steps:
       # ----------------------------------------------------------------------
@@ -183,7 +178,7 @@ jobs:
 # 5. DOWNLOAD BUILDS:
 #    - Go to Actions tab in GitHub
 #    - Click on your workflow run
-#    - Download artifacts at the bottom
+#    - Download the macOS build artifact (Build-StandaloneOSX)
 #
 # ==============================================================================
 # TROUBLESHOOTING
@@ -199,10 +194,18 @@ jobs:
 # Build is very slow:
 #   → First build always slower (no cache)
 #   → Subsequent builds use cached Library folder
+#   → macOS runners are typically faster than Linux runners
 #
 # Out of GitHub Actions minutes:
 #   → Free tier: 2000 minutes/month
-#   → Optimize by only building on main branch
-#   → Or only build specific platforms
+#   → macOS runners use 10x minutes (10 minutes = 100 billed minutes)
+#   → Consider building only on main branch to save minutes
+#
+# Want to build for other platforms?
+#   → Change runs-on to ubuntu-latest for Linux/Windows/WebGL
+#   → Add desired platforms to targetPlatform matrix
+#   → Windows: StandaloneWindows64
+#   → Linux: StandaloneLinux64
+#   → WebGL: WebGL
 #
 # ==============================================================================
